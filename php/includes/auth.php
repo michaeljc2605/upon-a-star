@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 
-/** Google OAuth and session authority live in the existing local Express API. */
+require_once __DIR__ . '/native-config.php';
+
+/** The default authority remains Express; shared hosting can opt into native PHP. */
 function php_auth_cookie(): ?string
 {
     $token = $_COOKIE['silver_session'] ?? null;
@@ -15,11 +17,22 @@ function php_api_request(string $method, string $path, ?array $body = null): arr
         || !preg_match('~^/api/[A-Za-z0-9/_-]+(?:\?[A-Za-z0-9_]+=[A-Za-z0-9%._-]*)?$~D', $path)) {
         throw new InvalidArgumentException('The local API request is invalid.');
     }
+    if (php_native_enabled()) {
+        // Internal writes originate only in existing PHP forms. Never infer
+        // this privilege from a browser header, JSON field or query parameter.
+        if ($method !== 'GET' && (!function_exists('verify_csrf') || !verify_csrf($_POST['csrf_token'] ?? null))) {
+            return ['status' => 403, 'data' => ['error' => 'Your form session expired. Please try again.']];
+        }
+        require_once dirname(__DIR__) . '/native/api.php';
+        $result = native_dispatch($method, $path, $body, true);
+        native_emit_cookies($result);
+        return ['status' => $result['status'], 'data' => $result['data']];
+    }
     $token = php_auth_cookie();
     if ($token === null) {
         return ['status' => 401, 'data' => null];
     }
-    $origin = rtrim(getenv('PHP_AUTH_API_ORIGIN') ?: 'http://127.0.0.1:4000', '/');
+    $origin = rtrim(php_setting('PHP_AUTH_API_ORIGIN') ?: 'http://127.0.0.1:4000', '/');
     $parts = parse_url($origin);
     if (!is_array($parts) || ($parts['scheme'] ?? '') !== 'http'
         || !in_array($parts['host'] ?? '', ['127.0.0.1', 'localhost'], true)
@@ -101,9 +114,10 @@ function php_current_user(): ?array
 
 function php_signin_url(): string
 {
+    if (php_native_enabled()) return base_url('api/auth/google') . '?client=php';
     // Use localhost in the browser: OAuth's host-only cookie is shared with
     // the PHP site across ports, but not with 127.0.0.1.
-    $origin = rtrim(getenv('PHP_AUTH_BROWSER_ORIGIN') ?: 'http://localhost:4000', '/');
+    $origin = rtrim(php_setting('PHP_AUTH_BROWSER_ORIGIN') ?: 'http://localhost:4000', '/');
     return $origin . '/api/auth/google?client=php';
 }
 

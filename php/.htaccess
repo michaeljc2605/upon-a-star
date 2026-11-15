@@ -4,7 +4,7 @@ AddType image/webp .webp
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule (^|/)\. - [F,NC]
-    RewriteRule ^(?:_start\.php|includes)(?:/|$) - [F,NC]
+    RewriteRule ^(?:_start\.php|includes|native|config(?:\.local|\.example)?\.php)(?:/|$) - [F,NC]
 
     # Browser requests to the old source path move to the public root URL.
     # Internal rewrites from the project root keep their original THE_REQUEST.

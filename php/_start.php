@@ -1,20 +1,19 @@
 <?php
 declare(strict_types=1);
 
-// The hybrid PHP site reuses the traditional pages without changing their
-// independent /base/ runtime. Google OAuth stays in the existing Node service.
+// The complete PHP site can use either the original Node service or its
+// optional native adapter without changing the independent /base/ runtime.
+require_once __DIR__ . '/includes/native-config.php';
 if (!defined('CINEMA_PHP_ENHANCED')) {
     define('CINEMA_PHP_ENHANCED', true);
 }
-$sitePath = getenv('PHP_SITE_PATH');
-putenv('BASE_PATH=' . ($sitePath === false ? '/SilverVillage' : $sitePath));
-$siteDatabase = getenv('PHP_DB_NAME');
-putenv('BASE_DB_NAME=' . ($siteDatabase === false ? 'silver_screen' : $siteDatabase));
+php_configure_site();
 
 require_once __DIR__ . '/../base/includes/bootstrap.php';
 
 // Archive a completed run on the next visit without deleting its booking history.
-db()->exec(<<<'SQL'
+if (!defined('CINEMA_NATIVE_API_REQUEST') || !CINEMA_NATIVE_API_REQUEST) {
+    db()->exec(<<<'SQL'
     UPDATE shows s SET s.status = 'archived'
      WHERE s.status = 'published' AND (
        (s.run_end_date IS NOT NULL AND s.run_end_date < CURRENT_DATE)
@@ -29,5 +28,6 @@ db()->exec(<<<'SQL'
                            AND TIMESTAMPADD(MINUTE, s.duration_minutes, upcoming.starts_at) > CURRENT_TIMESTAMP))
      )
     SQL);
+}
 
 require_once __DIR__ . '/includes/auth.php';

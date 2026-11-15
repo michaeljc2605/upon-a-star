@@ -2,14 +2,17 @@
 
 An IE4727 cinema-booking project by **Celine Emily Wijaya** and **Michael Joseph Candra**, group **F34-DG02**.
 
-This repository contains the complete PHP application, its Express API, optional React interface, public database snapshots, artwork, tests and bundled library licences. The working cinema uses a persistent MySQL/MariaDB database for accounts, screenings, bookings and tickets.
+This repository contains the complete PHP application, its original Express API, optional React interface, an opt-in native PHP backend, public database snapshots, artwork, tests and bundled library licences. The cinema uses a persistent MySQL/MariaDB database for accounts, screenings, bookings and tickets.
 
 - [Source repository](https://github.com/michaeljc2605/upon-a-star)
 - [Hosting and publication guide](docs/DEPLOYMENT.md)
-- [Oracle + TiDB free hosting, with Render fallback](docs/FREE-HOSTING.md)
+- [Native PHP deployment for InfinityFree](docs/INFINITYFREE.md)
+- [Free hosting status and limitations](docs/FREE-HOSTING.md)
 - [Original project report](docs/project-report.pdf)
 
-Publishing the source on GitHub does not deploy the application. Full hosting requires PHP, Node.js and a persistent database; account sign-in and ticket email also need their service configuration. No public application URL is claimed here until a server deployment is complete and verified. The original project assumes payment happens externally and does not integrate a payment provider.
+Publishing the source on GitHub does not deploy the application. The original mode uses PHP, Node.js and a persistent database. The opt-in native mode moves the complete backend into PHP for shared hosting, retaining the original PHP pages and design. Google sign-in and ticket email still require real service configuration and have not been verified on a live host. No public application URL is claimed here. The original project assumes payment happens externally and does not integrate a payment provider.
+
+The [InfinityFree guide](docs/INFINITYFREE.md) covers the prepared native package, private configuration and fresh database import. This is the complete cinema path, including account, booking and staff/owner operations. The independent assessed base and the original Node/React source remain available; the local installation instructions below retain their original setup.
 
 ## Validate the source
 
@@ -48,6 +51,8 @@ PHP defaults to MySQL at `127.0.0.1:3306`, user `root`, and an empty password. F
 
 ## Complete PHP-led site
 
+These are the original Express-backed local installation steps. For shared hosting without Node, use the separate [native PHP deployment guide](docs/INFINITYFREE.md).
+
 1. Install Node.js 22 and npm. Open a terminal in the `SilverVillage` folder and run `npm ci`.
 2. Copy `server/.env.example` to `server/.env`. Set the MySQL connection values and keep `MYSQL_DATABASE=silver_screen`. If these differ from the defaults above, also configure Apache's matching `BASE_DB_*` values.
 3. Supply `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Register the callback `http://localhost:4000/api/auth/google/callback` in the Google OAuth configuration. Keep the example's localhost origin settings.
@@ -63,7 +68,7 @@ With the API running, open another terminal in the project folder and run `npm r
 
 ## Ticket email configuration
 
-Set `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, and `EMAILJS_PUBLIC_KEY` in `server/.env`. Set `EMAILJS_PRIVATE_KEY` only if the EmailJS service requires it. In EmailJS, set the template's **Subject** to `{{email_subject}}`, **To Email** to `{{email}}`, and **From Name** to `Upon a Star Cinema`.
+Set `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, and `EMAILJS_PUBLIC_KEY` in `server/.env` for the original mode, or in the private `php/config.local.php` for native mode. Set `EMAILJS_PRIVATE_KEY` only if the EmailJS service requires it. In EmailJS, set the template's **Subject** to `{{email_subject}}`, **To Email** to `{{email}}`, and **From Name** to `Upon a Star Cinema`.
 
 A minimal compatible template body is:
 

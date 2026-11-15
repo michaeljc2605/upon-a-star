@@ -34,7 +34,7 @@ try {
 
 for (const path of [...new Set(files)].sort()) {
   const filename = path.split('/').at(-1);
-  if ((/^\.env(?:\.|$)/.test(filename) && !envExamples.has(path)) || /\.(?:pem|key|p12|pfx)$/i.test(filename) || filename === '.npmrc') {
+  if ((/^\.env(?:\.|$)/.test(filename) && !envExamples.has(path)) || /\.(?:pem|key|p12|pfx)$/i.test(filename) || filename === '.npmrc' || filename === 'config.local.php') {
     report(path, 0, 'private configuration or key file must not be published');
     continue;
   }

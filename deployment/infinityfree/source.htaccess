@@ -1,0 +1,12 @@
+Options -Indexes
+
+# Install this in both php/ and base/ in the shared-host package. Their original
+# development rules otherwise override the root directory's rewrite policy.
+# The public root routes use [END], so their internal targets skip these rules.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^ - [F,END]
+</IfModule>
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

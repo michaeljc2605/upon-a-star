@@ -32,6 +32,10 @@ jobs:
         run: node --test deployment/init-database.test.mjs
       - name: Check PHP syntax
         run: git ls-files -z '*.php' | xargs -0 -n 1 php -l
+      - name: Check native authentication and request protection
+        run: php scripts/test-native-auth.php
+      - name: Check shared-host configuration without putenv
+        run: PHP_DB_NAME=process-precedence-test php -d disable_functions=putenv scripts/test-native-private-config.php
 
   docker-smoke:
     name: Complete application (${{ matrix.architecture }})
@@ -67,11 +71,11 @@ jobs:
             trap - EXIT
             if (( status != 0 )); then
               # Report container state without dumping environments or credentials.
-              for container in upon-ci-app upon-ci-db; do
+              for container in upon-ci-app upon-ci-php upon-ci-native-tests upon-ci-db; do
                 docker inspect --format '{{.Name}} status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}}' "$container" 2>/dev/null || true
               done
             fi
-            docker rm --force --volumes upon-ci-app upon-ci-db >/dev/null 2>&1 || true
+            docker rm --force --volumes upon-ci-app upon-ci-php upon-ci-native-tests upon-ci-db >/dev/null 2>&1 || true
             docker network rm upon-ci-network >/dev/null 2>&1 || true
             exit "$status"
           }
@@ -207,3 +211,96 @@ jobs:
           [[ "$before_restart" == "$after_restart" ]] || { echo 'Restart changed existing database records.' >&2; exit 1; }
           check_routes
           echo 'The complete app passed its 512 MB container smoke test and preserved existing data across restart.'
+
+          # The harness creates and drops only its random test schema. Sharing
+          # MySQL's network namespace gives it genuine loopback access without
+          # opening a host database port or weakening its local-only guard.
+          timeout 180s docker run --rm --name upon-ci-native-tests \
+            --network container:upon-ci-db --memory=512m \
+            --env NATIVE_TEST_MYSQL_HOST=127.0.0.1 --env NATIVE_TEST_MYSQL_PORT=3306 \
+            --env NATIVE_TEST_MYSQL_USER=root \
+            --env NATIVE_TEST_MYSQL_PASSWORD="$MYSQL_ROOT_PASSWORD" \
+            --mount "type=bind,source=$PWD/scripts,target=/opt/upon-a-star/scripts,readonly" \
+            upon-a-star:ci sh -ec '
+              ln -s /var/www/html/php /opt/upon-a-star/php
+              ln -s /var/www/html/base /opt/upon-a-star/base
+              ln -s /var/www/html/index.php /opt/upon-a-star/index.php
+              exec node /opt/upon-a-star/scripts/test-native-integration.mjs --run
+            '
+
+          # Stop the hybrid runtime so these checks cannot accidentally reach
+          # its API. Apache runs the packaged PHP backend directly, with no
+          # ProxyPass directive and no Node server process.
+          docker stop upon-ci-app >/dev/null
+          docker run --detach --name upon-ci-php --network upon-ci-network --memory=512m \
+            --publish 127.0.0.1:18081:10000 \
+            --env PORT=10000 --env PHP_BACKEND=native --env PHP_SITE_PATH= \
+            --env PUBLIC_URL=http://localhost:18081 --env ALLOW_HTTP=true \
+            --env BASE_DB_HOST=upon-ci-db --env BASE_DB_PORT=3306 --env MYSQL_SSL=false \
+            --env PHP_DB_NAME="$MYSQL_DATABASE" --env BASE_DB_USER="$MYSQL_USER" \
+            --env BASE_DB_PASSWORD="$MYSQL_PASSWORD" \
+            --mount "type=bind,source=$PWD/deployment/infinityfree/ci-apache.conf,target=/etc/apache2/sites-available/000-default.conf,readonly" \
+            --mount "type=bind,source=$PWD/deployment/infinityfree/.htaccess,target=/var/www/html/.htaccess,readonly" \
+            --mount "type=bind,source=$PWD/deployment/infinityfree/source.htaccess,target=/var/www/html/php/.htaccess,readonly" \
+            --mount "type=bind,source=$PWD/deployment/infinityfree/source.htaccess,target=/var/www/html/base/.htaccess,readonly" \
+            upon-a-star:ci sh -ec 'printf "disable_functions=putenv\n" > /usr/local/etc/php/conf.d/native-host-restrictions.ini; exec apache2-foreground' >/dev/null
+          native_ready=false
+          for attempt in {1..40}; do
+            if curl --fail --silent --max-time 1 http://127.0.0.1:18081/api/health >/dev/null; then
+              native_ready=true
+              break
+            fi
+            [[ "$(docker inspect --format '{{.State.Running}}' upon-ci-php)" == true ]] || break
+            sleep 2
+          done
+          [[ "$native_ready" == true ]] || { echo 'Native Apache readiness timed out.' >&2; exit 1; }
+          docker exec upon-ci-php php -r '
+            foreach (glob("/proc/[0-9]*/comm") as $path) {
+              if (trim((string) @file_get_contents($path)) === "node") {
+                fwrite(STDERR, "The PHP-only container unexpectedly runs Node.\n"); exit(1);
+              }
+            }
+          '
+          python3 - <<'PY'
+          import json
+          import urllib.error
+          import urllib.request
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, response, code, message, headers, new_url):
+                  return None
+
+          opener = urllib.request.build_opener(NoRedirect())
+          def request(path, expected):
+              try:
+                  response = opener.open('http://127.0.0.1:18081' + path, timeout=10)
+              except urllib.error.HTTPError as error:
+                  response = error
+              with response:
+                  assert response.status in expected, f'{path}: expected {expected}, got {response.status}'
+                  return response.read().decode('utf-8')
+
+          assert json.loads(request('/api/health', (200,)))['ok'] is True
+          catalog = json.loads(request('/api/catalog', (200,)))
+          marker_ids = {show['id'] for show in catalog['shows'] if show['title'] == 'CI restart preservation marker'}
+          assert marker_ids, 'Native PHP did not read the existing SQL fixture'
+          assert any(item['show_id'] in marker_ids and int(item['seats_available']) > 0 for item in catalog['performances'])
+          for path in ('/', '/movies.php', '/showtimes.php', '/profile.php', '/staff.php', '/privacy.php', '/terms.php'):
+              page = request(path, (200,))
+              assert 'Upon a Star' in page and '<?php' not in page, f'{path}: PHP did not render'
+          assert request('/assets/base.css', (200,)).strip(), 'Packaged stylesheet is missing'
+          assert request('/qr-assets/qr-renderer.js', (200,)).strip(), 'Packaged QR renderer is missing'
+          assert json.loads(request('/api/auth/me', (401,))).get('error'), 'Private identity endpoint is not protected'
+          for path in (
+              '/php/', '/php/native/index.php', '/php/native/auth.php',
+              '/php/config.local.php', '/php/config.example.php', '/php/_start.php',
+              '/php/includes/native-config.php', '/base/', '/base/process-booking.php',
+              '/base/includes/bootstrap.php', '/server/.env', '/.git/config',
+              '/database/submission/silver_screen.sql', '/deployment/infinityfree/ci-apache.conf',
+              '/%70hp/config.local.php', '/%70hp/native/index.php',
+              '/php%2fnative%2findex.php', '/%62ase/process-booking.php',
+              '/base%2fprocess-booking.php', '/%2570hp/native/index.php',
+          ):
+              request(path, (403, 404))
+          print('Native Apache: SQL-backed API, canonical pages, assets, private paths and encoded bypass checks passed without a Node server.')
+          PY

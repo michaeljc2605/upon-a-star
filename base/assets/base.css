@@ -102,6 +102,10 @@ img { max-width: 100%; }
 .animal-worlds-magic i { background: linear-gradient(135deg,#d8b45a,#4d9b67); border-radius: 90% 10% 80% 20%; height: calc(var(--magic-size) * .65); }
 @keyframes gentle-drift { 0% { opacity: 0; transform: translate(-30px,40px) rotate(0) scale(.6); } 25%,70% { opacity: .7; } 100% { opacity: 0; transform: translate(var(--magic-drift),-115px) rotate(120deg) scale(1.05); } }
 .section, .movie-detail { margin: auto; max-width: 1340px; padding: clamp(2.75rem,5vw,4.5rem) clamp(1.4rem,4vw,3rem); }
+.policy-page { max-width: 960px; }
+.policy-page article { line-height: 1.75; }
+.policy-page article h2:not(:first-child) { margin-top: 2rem; }
+.policy-page article a, .footer-base a { color: var(--gold); text-underline-offset: .2em; }
 .heading { align-items: end; display: flex; gap: 2rem; justify-content: space-between; margin-bottom: 1.5rem; }
 .heading h1, .heading h2 { font-size: clamp(2.35rem,4vw,3.8rem); line-height: 1; margin: .3rem 0; }
 .heading > span { color: var(--ink-muted); line-height: 1.55; max-width: 360px; }

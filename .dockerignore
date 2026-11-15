@@ -28,4 +28,5 @@ server/src/*.test.js
 **/.DS_Store
 **/.env
 **/.env.*
+**/config.local.php
 **/node_modules/**

@@ -1,0 +1,24 @@
+Options -Indexes
+AddType image/webp .webp
+DirectoryIndex index.php
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule (^|/)\. - [F,NC]
+    RewriteRule ^(?:server|client|database|deployment|scripts|docs|node_modules)(?:/|$) - [F,NC]
+    # Source directories are available to PHP includes, never direct browser requests.
+    RewriteRule ^(?:base|php)(?:/|$) - [F,NC]
+    RewriteRule \.(?:sql|sqlite3?|db|bak|log|pem|key|ini|md|json|ya?ml)(?:\.gz)?$ - [F,NC]
+
+    # Internal entry points bypass later per-directory rewrites; direct paths above do not.
+    RewriteRule ^api(?:/.*)?$ php/native/index.php [END]
+    RewriteRule ^(movies|movie|showtimes|visit|book|process-booking|confirmation|find-booking|profile|my-bookings|staff|attendance|logout|resend-email|privacy|terms)\.php$ php/$1.php [END]
+    RewriteRule ^assets/(base\.css|base\.js|schedule\.js|booking-validation\.js)$ base/assets/$1 [END]
+    RewriteRule ^assets/(movies/[a-z0-9-]+/(?:poster|backdrop)\.webp|visit/(?:arrival|premier|normal|small)\.webp)$ base/assets/$1 [END]
+    RewriteRule ^qr-assets/(qr-renderer|staff-scanner)\.js$ php/qr-assets/$1.js [END]
+</IfModule>

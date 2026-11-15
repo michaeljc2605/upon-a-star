@@ -354,7 +354,7 @@ function page_footer(): void
       <div class="footer-column"><p>Visit</p><span>Open daily · 10:00–22:30</span><span>Arrive 20 minutes before showtime.</span><a href="<?= h(base_url('visit.php')) ?>">Plan your visit</a></div>
       <div class="footer-column"><p>Access</p><span>Assigned seating and booking support are available.</span><span>Speak to the cinema team for venue assistance.</span></div>
     </div>
-    <div class="footer-base"><small>© <?= date('Y') ?> Upon a Star Cinema</small><span>Original cinema concept · Movies under the stars</span></div>
+    <div class="footer-base"><small>© <?= date('Y') ?> Upon a Star Cinema</small><?php if (defined('CINEMA_PHP_ENHANCED') && CINEMA_PHP_ENHANCED): ?><span><a href="<?= h(base_url('privacy.php')) ?>">Privacy</a> · <a href="<?= h(base_url('terms.php')) ?>">Student project &amp; terms</a></span><?php else: ?><span>Original cinema concept · Movies under the stars</span><?php endif; ?></div>
   </footer>
 </div>
 </body>

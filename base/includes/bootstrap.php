@@ -17,6 +17,14 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+function base_setting(string $name): string|false
+{
+    // The standalone base keeps its original process configuration. Only the
+    // enhanced site loads the optional private configuration and site aliases.
+    if (defined('CINEMA_PHP_ENHANCED') && CINEMA_PHP_ENHANCED && function_exists('php_setting')) return php_setting($name);
+    return function_exists('getenv') ? getenv($name) : false;
+}
+
 function db(): PDO
 {
     static $connection = null;
@@ -26,11 +34,11 @@ function db(): PDO
 
     // Apache's process environment can override these defaults. No .env file is
     // placed below the document root or read from the existing Node application.
-    $host = getenv('BASE_DB_HOST') ?: '127.0.0.1';
-    $port = getenv('BASE_DB_PORT') ?: '3306';
-    $name = getenv('BASE_DB_NAME') ?: 'silver_screen_base';
-    $user = getenv('BASE_DB_USER') ?: 'root';
-    $password = getenv('BASE_DB_PASSWORD');
+    $host = base_setting('BASE_DB_HOST') ?: '127.0.0.1';
+    $port = base_setting('BASE_DB_PORT') ?: '3306';
+    $name = base_setting('BASE_DB_NAME') ?: 'silver_screen_base';
+    $user = base_setting('BASE_DB_USER') ?: 'root';
+    $password = base_setting('BASE_DB_PASSWORD');
     if ($password === false) {
         $password = '';
     }
@@ -45,12 +53,12 @@ function db(): PDO
     ];
     // Apache receives the same TLS settings as Node through its environment.
     // Local XAMPP connections stay unchanged unless MYSQL_SSL is enabled.
-    $sslSetting = strtolower(trim((string) (getenv('MYSQL_SSL') ?: '')));
+    $sslSetting = strtolower(trim((string) (base_setting('MYSQL_SSL') ?: '')));
     if (!in_array($sslSetting, ['', 'false', '0', 'true', '1'], true)) {
         throw new RuntimeException('MYSQL_SSL must be true or false.');
     }
     if (in_array($sslSetting, ['true', '1'], true)) {
-        $ca = trim((string) (getenv('MYSQL_SSL_CA') ?: ''));
+        $ca = trim((string) (base_setting('MYSQL_SSL_CA') ?: ''));
         if ($ca === '') {
             $locations = function_exists('openssl_get_cert_locations') ? openssl_get_cert_locations() : [];
             foreach ([$locations['default_cert_file'] ?? '', '/etc/ssl/certs/ca-certificates.crt', '/etc/ssl/cert.pem'] as $candidate) {
@@ -86,7 +94,7 @@ function h($value): string
 
 function base_url(string $path = ''): string
 {
-    $configured = getenv('BASE_PATH');
+    $configured = base_setting('BASE_PATH');
     $prefix = $configured === false ? '/SilverVillage/base' : (string) $configured;
     $prefix = '/' . trim($prefix, '/');
     if ($prefix === '/') {
