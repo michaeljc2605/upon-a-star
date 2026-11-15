@@ -3,10 +3,11 @@
 **Authors:** Celine Emily Wijaya and Michael Joseph Candra
 **Course and group:** IE4727 · F34-DG02
 **Repository:** [michaeljc2605/upon-a-star](https://github.com/michaeljc2605/upon-a-star)
+**Live website:** [Upon a Star Cinema](https://upon-a-star.infinityfreeapp.com/)
 
 ## Application architecture
 
-The complete cinema is a PHP-led application with persistent MySQL/MariaDB storage. Its original backend is Express; an opt-in native PHP backend is now prepared for shared hosting such as InfinityFree. Both modes retain the canonical PHP pages and design. The original Node/React source and independent assessed PHP base remain in the repository. Publishing this source does not deploy a website.
+The complete cinema is a PHP-led application with persistent MySQL/MariaDB storage. Its original backend is Express; the live InfinityFree deployment uses the opt-in native PHP backend. Both modes retain the canonical PHP pages and design. The original Node/React source and independent assessed PHP base remain in the repository. Publishing this source does not deploy a website.
 
 | Component | Runtime and purpose |
 | --- | --- |
@@ -44,7 +45,7 @@ The standalone base runs at `/SilverVillage/base/` with Apache and MySQL. The or
 
 ## Native PHP shared hosting
 
-The current prepared path is **native PHP with InfinityFree's own MySQL/MariaDB database**. The existing InfinityFree profile has no active hosting account yet. No native package is deployed, and real Google OAuth, EmailJS delivery and provider-specific behavior remain unverified. See [the native deployment guide](INFINITYFREE.md) for packaging, private `php/config.local.php`, the empty-database import and exact HTTPS callback.
+The live deployment is **native PHP with InfinityFree's own MySQL/MariaDB database**, at [upon-a-star.infinityfreeapp.com](https://upon-a-star.infinityfreeapp.com/). The homepage, catalogue, Google sign-in and owner access, saved bookings after reload, ticket email with QR images, and staff check-in with duplicate-ticket rejection have been verified on the live site. See [the native deployment guide](INFINITYFREE.md) for packaging, private `php/config.local.php`, the empty-database import and exact HTTPS callback.
 
 The existing free TiDB instance is unused by this route because InfinityFree blocks outbound database port 4000. Native mode is explicitly enabled with `PHP_BACKEND=native`; without that setting, the original Express integration remains the default. The shared-hosting package serves the complete PHP site at `/` and routes `/api` to PHP. It does not include the optional React build or the independent base as a public second site.
 
@@ -52,7 +53,7 @@ The existing free TiDB instance is unused by this route because InfinityFree blo
 
 The original Docker image still runs Apache/PHP and Express together. The [Oracle Compose files](../deployment/oracle/compose.yml) and [Render blueprint](../render.yaml) remain optional references. Oracle signup was blocked, Northflank signup is unavailable during an ongoing security-incident review, and Render's free-service cold start does not meet the current preference. None is a claimed live deployment. See [hosting status and limitations](FREE-HOSTING.md).
 
-A host for the complete project must support PHP, a persistent Node process and MySQL/MariaDB. Keep database storage independent of application rebuilds and restarts, using a persistent database volume or a managed database. Configure backups before storing operational data.
+A host for the original Express-backed mode must support PHP, a persistent Node process and MySQL/MariaDB. Keep database storage independent of application rebuilds and restarts, using a persistent database volume or a managed database. Configure backups before storing operational data.
 
 1. Serve browser-facing PHP, React (if used) and `/api` on one HTTPS host. Reverse-proxy `/api` to the Express process. The session cookie is host-only, so keeping these routes together matters.
 2. Run Express on the same machine or in the same application container as PHP, reachable through a loopback address. The PHP integration intentionally restricts `PHP_AUTH_API_ORIGIN` to a local HTTP origin; its default is `http://127.0.0.1:4000`. A deployment that separates PHP and Express across machines requires an explicit change to that integration.
@@ -62,7 +63,7 @@ A host for the complete project must support PHP, a persistent Node process and 
 6. Preserve the Apache access rules that protect source directories, environment files and SQL exports. Configure equivalent rules if changing servers. Keep PHP sessions and MySQL data available across ordinary application restarts.
 7. Verify the hosted catalogue, sign-in, booking persistence, seat availability, staff authorization, ticket lookup and email delivery. Confirm that created records survive a restart before treating the deployment as ready for use.
 
-The hosting destination, HTTPS hostname and private service configuration must be established and verified before a public application URL can be added to the repository or portfolio. The source-publication workflow does not create those accounts or resources. Keep real credentials out of the repository and use the configuration method for the selected backend.
+For another deployment, establish its hosting destination, HTTPS hostname and private service configuration, then complete the hosted checks above. The source-publication workflow does not create those accounts or resources. Keep real credentials out of the repository and use the configuration method for the selected backend.
 
 ## Programme dates
 
