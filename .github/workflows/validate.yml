@@ -128,8 +128,9 @@ jobs:
           assert json.loads(request('/api/health', 200))['ok'] is True
           catalog = json.loads(request('/api/catalog', 200))
           marker = 'CI restart preservation marker'
-          assert any(show['title'] == marker for show in catalog['shows']), 'API did not read the live SQL fixture'
-          assert any(item['title'] == marker and int(item['seats_available']) > 0 for item in catalog['performances']), 'Imported screening seats are missing'
+          marker_ids = {show['id'] for show in catalog['shows'] if show['title'] == marker}
+          assert marker_ids, 'API did not read the live SQL fixture'
+          assert any(item['show_id'] in marker_ids and int(item['seats_available']) > 0 for item in catalog['performances']), 'Imported screening seats are missing'
           oauth = json.loads(request('/api/auth/google?client=php', 503))
           assert oauth.get('error') == 'Google sign-in is not configured.', 'Unconfigured OAuth did not fail safely'
           for path in (
@@ -137,6 +138,7 @@ jobs:
               '/deployment/init-database.mjs', '/.git/config', '/package.json',
               '/php/includes/db.php', '/php/_start.php', '/base/includes/bootstrap.php',
               '/base/', '/base/process-booking.php',
+              '/%62ase/process-booking.php', '/base%2fprocess-booking.php', '/%70hp/_start.php',
           ):
               request(path, 404)
           print('PHP rendering, SQL-backed API, protected paths and unconfigured OAuth passed.')
