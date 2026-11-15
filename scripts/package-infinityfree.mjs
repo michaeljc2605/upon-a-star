@@ -27,6 +27,11 @@ async function copyPublic(directory) {
 }
 await copyPublic('base');
 await copyPublic('php');
+// Per-directory rewrite settings override their parent's rules. Keep source
+// entry points private while the root's [END] routes serve the intended pages.
+for (const directory of ['base', 'php']) {
+  await cp(join(root, 'deployment/infinityfree/source.htaccess'), join(destination, 'htdocs', directory, '.htaccess'));
+}
 await cp(join(root, 'index.php'), join(destination, 'htdocs/index.php'));
 await cp(join(root, 'deployment/infinityfree/.htaccess'), join(destination, 'htdocs/.htaccess'));
 files.push('index.php', '.htaccess');

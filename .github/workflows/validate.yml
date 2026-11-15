@@ -241,6 +241,8 @@ jobs:
             --env BASE_DB_PASSWORD="$MYSQL_PASSWORD" \
             --mount "type=bind,source=$PWD/deployment/infinityfree/ci-apache.conf,target=/etc/apache2/sites-available/000-default.conf,readonly" \
             --mount "type=bind,source=$PWD/deployment/infinityfree/.htaccess,target=/var/www/html/.htaccess,readonly" \
+            --mount "type=bind,source=$PWD/deployment/infinityfree/source.htaccess,target=/var/www/html/php/.htaccess,readonly" \
+            --mount "type=bind,source=$PWD/deployment/infinityfree/source.htaccess,target=/var/www/html/base/.htaccess,readonly" \
             upon-a-star:ci sh -ec 'printf "disable_functions=putenv\n" > /usr/local/etc/php/conf.d/native-host-restrictions.ini; exec apache2-foreground' >/dev/null
           native_ready=false
           for attempt in {1..40}; do
