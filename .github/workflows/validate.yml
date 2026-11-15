@@ -221,11 +221,13 @@ jobs:
             --env NATIVE_TEST_MYSQL_USER=root \
             --env NATIVE_TEST_MYSQL_PASSWORD="$MYSQL_ROOT_PASSWORD" \
             --mount "type=bind,source=$PWD/scripts,target=/opt/upon-a-star/scripts,readonly" \
+            --mount "type=bind,source=$PWD/deployment/infinityfree,target=/opt/upon-a-star/deployment/infinityfree,readonly" \
             upon-a-star:ci sh -ec '
               ln -s /var/www/html/php /opt/upon-a-star/php
               ln -s /var/www/html/base /opt/upon-a-star/base
               ln -s /var/www/html/index.php /opt/upon-a-star/index.php
-              exec node /opt/upon-a-star/scripts/test-native-integration.mjs --run
+              node /opt/upon-a-star/scripts/test-native-integration.mjs --run
+              exec node /opt/upon-a-star/scripts/test-rolling-programme.mjs --run
             '
 
           # Stop the hybrid runtime so these checks cannot accidentally reach
