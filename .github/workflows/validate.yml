@@ -88,6 +88,7 @@ jobs:
             python3 - <<'PY'
           import json
           from html.parser import HTMLParser
+          from urllib.parse import urlsplit
           import urllib.error
           import urllib.request
 
@@ -120,7 +121,7 @@ jobs:
                       self.paths.add(asset)
           assets = Assets()
           assets.feed(homepage)
-          assert any(path.endswith('.css') for path in assets.paths), 'No local stylesheet was found'
+          assert any(urlsplit(path).path.endswith('.css') for path in assets.paths), 'No local stylesheet was found'
           for path in assets.paths:
               with opener.open('http://127.0.0.1:18080' + path, timeout=15) as response:
                   assert response.status == 200 and response.read(1), f'{path}: missing asset'
