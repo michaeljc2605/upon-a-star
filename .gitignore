@@ -1,0 +1,43 @@
+# Local secrets; publish only the reviewed configuration templates.
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.pem
+*.key
+*.p12
+*.pfx
+.npmrc
+
+# Dependencies and generated build/test output.
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.cache/
+*.tsbuildinfo
+
+# Runtime output and local backups. Reviewed SQL snapshots remain versioned.
+*.log
+logs/
+*.pid
+*.bak
+*.backup
+*.tmp
+*.tmp-*
+*.sqlite
+*.sqlite3
+*.db
+backups/
+private-exports/
+
+# Operating-system and editor files.
+.DS_Store
+._*
+__MACOSX/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

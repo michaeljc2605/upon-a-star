@@ -1,0 +1,82 @@
+[
+  {
+    "title": "Coco",
+    "slug": "coco",
+    "synopsis": "A young musician follows a family mystery into the Land of the Dead, where memories and music bring him closer to his ancestors.",
+    "genre": "Animation, Family, Fantasy, Musical",
+    "durationMinutes": 106,
+    "ageRating": "PG",
+    "themeKey": "worlds_of_imagination",
+    "sourceUrl": "https://movies.disney.com/COCO"
+  },
+  {
+    "title": "Soul",
+    "slug": "soul",
+    "synopsis": "A jazz teacher finds himself in the Great Before and discovers how small moments can give life its meaning.",
+    "genre": "Animation, Family, Fantasy, Musical",
+    "durationMinutes": 100,
+    "ageRating": "PG",
+    "themeKey": "worlds_of_imagination",
+    "sourceUrl": "https://movies.disney.com/soul"
+  },
+  {
+    "title": "Luca",
+    "slug": "luca",
+    "synopsis": "Two young sea monsters share a summer of friendship, scooters, and new discoveries on the Italian Riviera.",
+    "genre": "Animation, Family, Adventure, Comedy",
+    "durationMinutes": 95,
+    "ageRating": "PG",
+    "themeKey": "ocean_and_islands",
+    "sourceUrl": "https://movies.disney.com/luca"
+  },
+  {
+    "title": "Encanto",
+    "slug": "encanto",
+    "synopsis": "Mirabel searches for a way to protect her gifted family when the magic of their Colombian home begins to fade.",
+    "genre": "Animation, Family, Fantasy, Musical",
+    "durationMinutes": 102,
+    "ageRating": "PG",
+    "themeKey": "enchanted_castle",
+    "sourceUrl": "https://movies.disney.com/encanto"
+  },
+  {
+    "title": "Turning Red",
+    "slug": "turning-red",
+    "synopsis": "Mei tries to balance school, friends, and family after strong emotions start transforming her into a giant red panda.",
+    "genre": "Animation, Family, Comedy, Fantasy",
+    "durationMinutes": 100,
+    "ageRating": "PG",
+    "themeKey": "animal_worlds",
+    "sourceUrl": "https://movies.disney.com/turning-red"
+  },
+  {
+    "title": "Elemental",
+    "slug": "elemental",
+    "synopsis": "In a city of fire, water, earth, and air, Ember and Wade find an unexpected connection that changes their outlook.",
+    "genre": "Animation, Family, Comedy, Fantasy",
+    "durationMinutes": 103,
+    "ageRating": "PG",
+    "themeKey": "worlds_of_imagination",
+    "sourceUrl": "https://movies.disney.com/elemental"
+  },
+  {
+    "title": "Onward",
+    "slug": "onward",
+    "synopsis": "Two elf brothers set off on a magical quest for one more day with their father and learn what family means along the way.",
+    "genre": "Animation, Family, Adventure, Fantasy",
+    "durationMinutes": 102,
+    "ageRating": "PG",
+    "themeKey": "legends_and_courage",
+    "sourceUrl": "https://movies.disney.com/onward"
+  },
+  {
+    "title": "A Bug's Life",
+    "slug": "a-bugs-life",
+    "synopsis": "An inventive ant recruits a circus troupe to help his colony stand up to the grasshoppers threatening their home.",
+    "genre": "Animation, Family, Adventure, Comedy",
+    "durationMinutes": 95,
+    "ageRating": "G",
+    "themeKey": "animal_worlds",
+    "sourceUrl": "https://movies.disney.com/a-bugs-life"
+  }
+]

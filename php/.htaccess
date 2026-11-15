@@ -1,0 +1,19 @@
+Options -Indexes
+AddType image/webp .webp
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule (^|/)\. - [F,NC]
+    RewriteRule ^(?:_start\.php|includes)(?:/|$) - [F,NC]
+
+    # Browser requests to the old source path move to the public root URL.
+    # Internal rewrites from the project root keep their original THE_REQUEST.
+    RewriteCond %{THE_REQUEST} /SilverVillage/php/ [NC]
+    RewriteRule ^$ /SilverVillage/ [R=302,L]
+    RewriteCond %{THE_REQUEST} /SilverVillage/php/index\.php [NC]
+    RewriteRule ^index\.php$ /SilverVillage/ [R=302,L]
+    RewriteCond %{REQUEST_METHOD} ^GET$ [OR]
+    RewriteCond %{REQUEST_METHOD} ^HEAD$
+    RewriteCond %{THE_REQUEST} /SilverVillage/php/ [NC]
+    RewriteRule ^(movies|movie|showtimes|visit|book|process-booking|confirmation|find-booking|profile|my-bookings|staff|attendance|logout|resend-email)\.php$ /SilverVillage/$1.php [R=302,L]
+</IfModule>

@@ -1,0 +1,195 @@
+name: Validate application source
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Check publication files
+        run: node scripts/check-publication.mjs
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Check application
+        run: npm run check
+      - name: Check empty-only database initialization
+        run: node --test deployment/init-database.test.mjs
+      - name: Check PHP syntax
+        run: git ls-files -z '*.php' | xargs -0 -n 1 php -l
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Build the complete application image
+        run: docker build --tag upon-a-star:ci .
+      - name: Exercise PHP, API, database initialization and restart
+        shell: bash
+        env:
+          # Disposable CI credentials, never deployment credentials.
+          MYSQL_DATABASE: upon_a_star_ci
+          MYSQL_USER: upon_ci
+          MYSQL_PASSWORD: ci-only-disposable-password
+          MYSQL_ROOT_PASSWORD: ci-only-disposable-root-password
+        run: |
+          set -Eeuo pipefail
+          cleanup() {
+            local status=$?
+            trap - EXIT
+            if (( status != 0 )); then
+              # Report container state without dumping environments or credentials.
+              for container in upon-ci-app upon-ci-db; do
+                docker inspect --format '{{.Name}} status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}}' "$container" 2>/dev/null || true
+              done
+            fi
+            docker rm --force --volumes upon-ci-app upon-ci-db >/dev/null 2>&1 || true
+            docker network rm upon-ci-network >/dev/null 2>&1 || true
+            exit "$status"
+          }
+          trap cleanup EXIT
+          mysql_query() {
+            docker exec --interactive --env MYSQL_PWD="$MYSQL_PASSWORD" upon-ci-db \
+              mysql --user="$MYSQL_USER" --database="$MYSQL_DATABASE" \
+              --batch --skip-column-names "$@"
+          }
+          wait_for_app() {
+            for attempt in {1..90}; do
+              if curl --fail --silent --max-time 2 http://127.0.0.1:18080/api/health >/dev/null; then
+                return 0
+              fi
+              if [[ "$(docker inspect --format '{{.State.Running}}' upon-ci-app)" != true ]]; then
+                echo 'Application container exited before it became ready.' >&2
+                return 1
+              fi
+              sleep 2
+            done
+            echo 'Application readiness timed out.' >&2
+            return 1
+          }
+          check_routes() {
+            python3 - <<'PY'
+          import json
+          from html.parser import HTMLParser
+          import urllib.error
+          import urllib.request
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, response, code, message, headers, new_url):
+                  return None
+
+          opener = urllib.request.build_opener(NoRedirect())
+          def request(path, expected_status):
+              try:
+                  response = opener.open('http://127.0.0.1:18080' + path, timeout=15)
+              except urllib.error.HTTPError as error:
+                  response = error
+              with response:
+                  assert response.status == expected_status, f'{path}: expected {expected_status}, got {response.status}'
+                  return response.read().decode('utf-8')
+
+          homepage = request('/', 200)
+          assert '<!doctype html' in homepage.lower(), 'PHP homepage did not render HTML'
+          assert 'Upon a Star' in homepage, 'PHP homepage branding is missing'
+          assert '<?php' not in homepage, 'PHP source was served instead of executed'
+          for path in ('/movies.php', '/showtimes.php', '/visit.php'):
+              assert 'Upon a Star' in request(path, 200), f'{path}: PHP page did not render'
+          class Assets(HTMLParser):
+              paths = set()
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  asset = attrs.get('src') if tag in ('img', 'script') else attrs.get('href') if tag == 'link' and attrs.get('rel') == 'stylesheet' else None
+                  if asset and asset.startswith('/') and not asset.startswith('//'):
+                      self.paths.add(asset)
+          assets = Assets()
+          assets.feed(homepage)
+          assert any(path.endswith('.css') for path in assets.paths), 'No local stylesheet was found'
+          for path in assets.paths:
+              with opener.open('http://127.0.0.1:18080' + path, timeout=15) as response:
+                  assert response.status == 200 and response.read(1), f'{path}: missing asset'
+          assert json.loads(request('/api/health', 200))['ok'] is True
+          catalog = json.loads(request('/api/catalog', 200))
+          marker = 'CI restart preservation marker'
+          assert any(show['title'] == marker for show in catalog['shows']), 'API did not read the live SQL fixture'
+          assert any(item['title'] == marker and int(item['seats_available']) > 0 for item in catalog['performances']), 'Imported screening seats are missing'
+          oauth = json.loads(request('/api/auth/google?client=php', 503))
+          assert oauth.get('error') == 'Google sign-in is not configured.', 'Unconfigured OAuth did not fail safely'
+          for path in (
+              '/server/.env', '/server/src/server.js', '/database/submission/silver_screen.sql',
+              '/deployment/init-database.mjs', '/.git/config', '/package.json',
+              '/php/includes/db.php', '/php/_start.php', '/base/includes/bootstrap.php',
+              '/base/', '/base/process-booking.php',
+          ):
+              request(path, 404)
+          print('PHP rendering, SQL-backed API, protected paths and unconfigured OAuth passed.')
+          PY
+          }
+
+          docker network create upon-ci-network >/dev/null
+          docker run --detach --name upon-ci-db --network upon-ci-network \
+            --env MYSQL_DATABASE --env MYSQL_USER --env MYSQL_PASSWORD --env MYSQL_ROOT_PASSWORD \
+            --health-cmd='MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqladmin ping --host=127.0.0.1 --user=root --silent' \
+            --health-interval=2s --health-timeout=2s --health-retries=60 --health-start-period=20s \
+            mysql:8.4 >/dev/null
+          database_ready=false
+          for attempt in {1..90}; do
+            if [[ "$(docker inspect --format '{{.State.Health.Status}}' upon-ci-db)" == healthy ]] \
+              && mysql_query --execute='SELECT 1' >/dev/null 2>&1; then
+              database_ready=true
+              break
+            fi
+            sleep 2
+          done
+          [[ "$database_ready" == true ]] || { echo 'MySQL readiness timed out.' >&2; exit 1; }
+
+          docker run --detach --name upon-ci-app --network upon-ci-network --memory=512m \
+            --publish 127.0.0.1:18080:10000 \
+            --env PORT=10000 --env PUBLIC_URL=http://localhost:18080 --env ALLOW_HTTP=true \
+            --env MYSQL_HOST=upon-ci-db --env MYSQL_PORT=3306 --env MYSQL_SSL=false \
+            --env MYSQL_DATABASE --env MYSQL_USER --env MYSQL_PASSWORD \
+            --env INITIALIZE_EMPTY_DATABASE=true \
+            upon-a-star:ci >/dev/null
+          wait_for_app
+          read -r shows screenings seats < <(mysql_query --execute='SELECT (SELECT COUNT(*) FROM shows), (SELECT COUNT(*) FROM performances), (SELECT COUNT(*) FROM performance_seats)')
+          (( shows > 0 && screenings > 0 && seats > 0 )) || { echo 'The public database snapshot was not initialized.' >&2; exit 1; }
+
+          # Move one temporary CI screening into the future so the smoke test
+          # remains meaningful after the supplied 2026 programme has ended.
+          mysql_query <<'SQL'
+          SET time_zone = '+08:00';
+          SET @ci_show_id = (SELECT show_id FROM performances ORDER BY id LIMIT 1);
+          UPDATE shows SET title = 'CI restart preservation marker', status = 'published',
+            run_start_date = CURRENT_DATE - INTERVAL 1 DAY,
+            run_end_date = CURRENT_DATE + INTERVAL 14 DAY,
+            sales_open_date = CURRENT_DATE - INTERVAL 1 DAY WHERE id = @ci_show_id;
+          UPDATE performances SET starts_at = NOW() + INTERVAL 2 DAY, status = 'scheduled',
+            history_deleted_at = NULL WHERE show_id = @ci_show_id ORDER BY id LIMIT 1;
+          CREATE TABLE ci_restart_guard (id INT PRIMARY KEY, marker VARCHAR(80) NOT NULL);
+          INSERT INTO ci_restart_guard VALUES (1, 'preserve existing database');
+          SQL
+          check_routes
+          preservation_query="SELECT title FROM shows WHERE title = 'CI restart preservation marker'; SELECT COUNT(*) FROM shows; SELECT COUNT(*) FROM performances; SELECT COUNT(*) FROM performance_seats; SELECT marker FROM ci_restart_guard WHERE id = 1;"
+          before_restart=$(mysql_query --execute="$preservation_query")
+          docker restart upon-ci-app >/dev/null
+          wait_for_app
+          after_restart=$(mysql_query --execute="$preservation_query")
+          [[ "$before_restart" == "$after_restart" ]] || { echo 'Restart changed existing database records.' >&2; exit 1; }
+          check_routes
+          echo 'The complete app passed its 512 MB container smoke test and preserved existing data across restart.'

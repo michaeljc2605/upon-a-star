@@ -1,0 +1,39 @@
+# $0 hobby deployment. No paid databases, disks or workers are provisioned.
+services:
+  - type: web
+    name: upon-a-star
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: checksPass
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TZ
+        value: Asia/Singapore
+      - key: PORT
+        value: "10000"
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        value: "4000"
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_DATABASE
+        value: silver_screen
+      - key: MYSQL_SSL
+        value: "true"
+      - key: MYSQL_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
+      - key: INITIALIZE_EMPTY_DATABASE
+        value: "true"
+      - key: SESSION_TTL_MINUTES
+        value: "60"
+      # Configure Google and EmailJS in the service dashboard after its URL exists.
+      # See docs/FREE-HOSTING.md. No secret service keys belong in this file.

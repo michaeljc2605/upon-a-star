@@ -1,0 +1,27 @@
+# Apache serves this repository from htdocs. Only application pages and assets
+# should be reachable over HTTP; source, credentials, dumps, and notes stay local.
+Options -Indexes
+AddType image/webp .webp
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block hidden files and directories at any depth (.env, .git, .DS_Store).
+    RewriteRule (^|/)\. - [F,NC]
+
+    # These directories contain source, dependencies, database material, or notes.
+    RewriteRule ^(?:client|server|database|documentation|downloads|scripts|node_modules|\.agents|\.codex)(?:/|$) - [F,NC]
+    RewriteRule (^|/)node_modules(?:/|$) - [F,NC]
+    RewriteRule ^base/(?:includes|database)(?:/|$) - [F,NC]
+    RewriteRule ^php/(?:includes|_start\.php)(?:/|$) - [F,NC]
+
+    # Prevent direct download of repository and database files anywhere in the tree.
+    RewriteRule (^|/)[^/]+\.(?:sql|sqlite3?|db|bak|log|pem|key|ini|md)(?:\.gz)?$ - [F,NC]
+    RewriteRule ^(?:package(?:-lock)?\.json|composer(?:\.lock|\.json))$ - [F,NC]
+
+    # Public URLs map only to known PHP pages and assets. Source stays private.
+    RewriteRule ^(movies|movie|showtimes|visit|book|process-booking|confirmation|find-booking|profile|my-bookings|staff|attendance|logout|resend-email)\.php$ php/$1.php [L]
+    RewriteRule ^assets/(base\.css|base\.js|schedule\.js|booking-validation\.js)$ base/assets/$1 [L]
+    RewriteRule ^assets/(movies/[a-z0-9-]+/(?:poster|backdrop)\.webp|visit/(?:arrival|premier|normal|small)\.webp)$ base/assets/$1 [L]
+    RewriteRule ^qr-assets/(qr-renderer|staff-scanner)\.js$ php/qr-assets/$1.js [L]
+</IfModule>

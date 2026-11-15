@@ -1,0 +1,23 @@
+{
+  "name": "upon-a-star-cinema",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev:server": "npm --workspace server run dev",
+    "dev:client": "npm --workspace client run dev",
+    "build": "npm --workspace client run build",
+    "assets:normalize": "node scripts/normalize-disney-assets.mjs",
+    "assets:expanded": "node scripts/download-expanded-assets.mjs",
+    "db:dump:public": "node scripts/export-public-database.mjs",
+    "db:verify:public": "node scripts/verify-public-database-dump.mjs",
+    "verify:programme": "node scripts/verify-disney-programme.mjs",
+    "check": "node --test scripts/disney-programme-data.test.mjs && npm --workspace server run check && npm --workspace client run check"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "fsevents@2.3.3": true
+  }
+}
