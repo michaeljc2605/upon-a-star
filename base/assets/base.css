@@ -397,7 +397,7 @@ form .primary { margin-top: 0; }
 .booking-poster { border-radius: 12px; display: block; height: auto; margin-inline: auto; max-height: min(58svh,480px); max-width: 100%; object-fit: contain; width: auto; }
 .booking-seat-map { overflow-x: auto; padding: .5rem 0 1rem; text-align: center; }
 .booking-seat-row { align-items: center; display: flex; gap: .3rem; justify-content: center; margin: .35rem 0; white-space: nowrap; }
-.booking-seat { cursor: pointer; display: inline-flex; margin: 0; }
+.booking-seat { cursor: pointer; display: inline-flex; margin: 0; position: relative; }
 .booking-seat input { height: 1px; opacity: 0; position: absolute; width: 1px; }
 .booking-seat span { align-items: center; background: rgba(132,207,255,.15); border: 1px solid rgba(132,207,255,.5); border-radius: 6px 6px 3px 3px; color: var(--cream); display: inline-flex; font-size: .65rem; font-weight: 700; height: 30px; justify-content: center; min-width: 32px; padding: 0 .15rem; }
 .booking-seat input:checked + span { background: var(--gold); border-color: var(--gold); color: var(--navy); }

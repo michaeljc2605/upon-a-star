@@ -4,13 +4,14 @@ An IE4727 cinema-booking project by **Celine Emily Wijaya** and **Michael Joseph
 
 This repository contains the complete PHP application, its original Express API, optional React interface, an opt-in native PHP backend, public database snapshots, artwork, tests and bundled library licences. The cinema uses a persistent MySQL/MariaDB database for accounts, screenings, bookings and tickets.
 
+- [Live website](https://upon-a-star.infinityfreeapp.com/)
 - [Source repository](https://github.com/michaeljc2605/upon-a-star)
 - [Hosting and publication guide](docs/DEPLOYMENT.md)
 - [Native PHP deployment for InfinityFree](docs/INFINITYFREE.md)
 - [Free hosting status and limitations](docs/FREE-HOSTING.md)
 - [Original project report](docs/project-report.pdf)
 
-Publishing the source on GitHub does not deploy the application. The original mode uses PHP, Node.js and a persistent database. The opt-in native mode moves the complete backend into PHP for shared hosting, retaining the original PHP pages and design. Google sign-in and ticket email still require real service configuration and have not been verified on a live host. No public application URL is claimed here. The original project assumes payment happens externally and does not integrate a payment provider.
+The live site runs the complete native PHP backend on InfinityFree with its hosted MySQL/MariaDB database, retaining the original PHP pages and design. The homepage, catalogue, Google sign-in and owner access, saved bookings after reload, ticket email with QR images, and staff check-in with duplicate-ticket rejection have been verified on the live site. The original mode uses PHP, Node.js and a persistent database. The original project assumes payment happens externally and does not integrate a payment provider.
 
 The [InfinityFree guide](docs/INFINITYFREE.md) covers the prepared native package, private configuration and fresh database import. This is the complete cinema path, including account, booking and staff/owner operations. The independent assessed base and the original Node/React source remain available; the local installation instructions below retain their original setup.
 
@@ -75,17 +76,21 @@ A minimal compatible template body is:
 ```html
 <h2>Upon a Star Cinema</h2>
 <p>Your tickets are confirmed. Booking: {{order_id}}</p>
+<p>{{ticket_details}}</p>
 {{#orders}}
   <p>{{name}}<br>Ticket: {{ticket_code}}</p>
   <img src="{{qr_url}}" width="220" height="220" alt="QR code for {{ticket_code}}">
 {{/orders}}
 <p>Booking total: Rp {{cost.total}}</p>
+<p>Payment is handled separately; this email does not confirm payment.</p>
 ```
 
 Each order contains one seat's ticket code and QR link. Keep the code visible as text because email clients can hide remote images. A failed email does not cancel the saved booking. The base version does not send email. Camera scanning needs browser permission. Payment is assumed to happen externally; no payment provider is integrated.
 
 ## Programme dates and source
 
-The exported programme runs through **18 December 2026**. Availability follows Singapore time, so past screenings are not bookable. For later demos, update run dates and add future screenings through the owner tools. The base's `base/database/refresh-schedule.php` can add future screenings for eligible published films within their run dates.
+The native PHP backend supports an opt-in [rolling programme](docs/ROLLING-PROGRAMME.md) for the current 18 published films through **31 December 2099**. Once enabled with the incremental SQL migration, visits replenish a **45-day timetable** in Singapore time, with no monthly schedule reset or scheduled job. Existing bookings, screenings and owner cancellations remain intact.
+
+The original database snapshot ends on **18 December 2026**. Local installations using the original Node backend or independent base retain manual scheduling: extend film run dates and add screenings through the owner tools. The base's `base/database/refresh-schedule.php` can add future screenings for eligible published films within their run dates. Do not reimport a snapshot over an existing cinema database to extend its programme.
 
 The source includes all PHP/React/Express files, CSS, artwork, routing rules, tests, utility scripts, and bundled library licences. Zootopia 2 uses remote artwork URLs and needs internet for those images. The `php/assets` alias is materialized as ordinary files for Windows extraction. Run npm commands from the project folder; `npm ci` restores dependencies omitted from the ZIP.

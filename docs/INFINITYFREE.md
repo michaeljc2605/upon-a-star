@@ -1,6 +1,6 @@
 # Complete cinema on PHP shared hosting
 
-The opt-in native PHP backend is prepared for InfinityFree while retaining the complete PHP site's design, Google accounts, profiles, seat holds, bookings, ticket history, email and staff/owner operations. The original Express and React source remains available. This package has **not been deployed**; real Google consent, EmailJS delivery and InfinityFree-specific behavior still require hosted verification. An InfinityFree profile exists, but there is no active hosting account yet.
+The complete native PHP backend is deployed at [Upon a Star Cinema](https://upon-a-star.infinityfreeapp.com/) with InfinityFree's hosted MySQL/MariaDB database. It retains the PHP site's design, Google accounts, profiles, seat holds, bookings, ticket history, email and staff/owner operations. The homepage, catalogue, Google sign-in and owner access, saved bookings after reload, ticket email with QR images, and staff check-in with duplicate-ticket rejection have been verified on the live site. The original Express and React source remains available.
 
 ## Build the upload package
 
@@ -13,7 +13,7 @@ node scripts/package-infinityfree.mjs
 This creates a new `build/infinityfree/` directory and refuses to replace an existing output directory. An optional path argument selects another new destination. Node is used to prepare the package locally; the uploaded website runs PHP without a Node process.
 
 - Upload only the **contents of `build/infinityfree/htdocs/`** to the hosting account's `htdocs`, including its `.htaccess`.
-- Keep `database/empty-database-import.sql`, `manifest.json` and `README.txt` outside the public web directory.
+- Keep the entire `database/` directory, `manifest.json`, `README.txt` and `ROLLING-PROGRAMME.md` outside the public web directory.
 - The packager excludes private configuration, Node dependencies, original SQL exports and the independent base's installer. Its routing rules protect the PHP source/configuration directories while exposing the canonical pages, assets and same-origin API.
 
 ## Database and private configuration
@@ -41,23 +41,23 @@ Use InfinityFree's own database for this deployment. The existing TiDB Starter i
 
 ## Google sign-in and ticket email
 
-Register a Google OAuth **Web application** with this exact redirect, replacing the hostname with the real site address:
+The live site's Google OAuth **Web application** uses this exact redirect. For a separate deployment, replace the hostname with that site's address:
 
 ```text
-https://YOUR-CINEMA-HOSTNAME/api/auth/google/callback
+https://upon-a-star.infinityfreeapp.com/api/auth/google/callback
 ```
 
-It must match both `PHP_PUBLIC_URL` and `GOOGLE_REDIRECT_URI`. The app requests only `openid email profile`; Google's Testing exception removes the test-user-list requirement and seven-day authorization expiry for those scopes. Other scopes and organizational account restrictions can change that behavior. Unconfigured sign-in reports unavailable rather than providing a substitute login. [Google audience rules](https://support.google.com/cloud/answer/15549945?hl=en), [callback rules](https://developers.google.com/identity/protocols/oauth2/web-server#uri-validation).
+Set `PHP_PUBLIC_URL` to the site's HTTPS origin and `GOOGLE_REDIRECT_URI` to that origin followed by `/api/auth/google/callback`, matching the registered redirect exactly. The app requests only `openid email profile`; Google's Testing exception removes the test-user-list requirement and seven-day authorization expiry for those scopes. Other scopes and organizational account restrictions can change that behavior. Unconfigured sign-in reports unavailable rather than providing a substitute login. [Google audience rules](https://support.google.com/cloud/answer/15549945?hl=en), [callback rules](https://developers.google.com/identity/protocols/oauth2/web-server#uri-validation).
 
 The package includes `/privacy.php` and `/terms.php`. Use their full hosted HTTPS URLs, together with the homepage, when configuring Google's app details.
 
-Use the [README's EmailJS template fields](../README.md#ticket-email-configuration). PHP sends a server-side HTTPS POST, so the actual EmailJS account must permit those requests and stay within its free allowance. A failed email does not undo a saved booking; check the displayed result and retry flow. Ticket emails currently use external QR image URLs plus human-readable ticket codes, so delivery and image loading must be checked in a real mailbox. No payment gateway is integrated. [EmailJS send endpoint](https://www.emailjs.com/docs/rest-api/send/).
+Use the [README's EmailJS template fields](../README.md#ticket-email-configuration). PHP sends a server-side HTTPS POST, so the actual EmailJS account must permit those requests and stay within its free allowance. A failed email does not undo a saved booking; check the displayed result and retry flow. Ticket emails use external QR image URLs plus human-readable ticket codes. Live verification confirmed inbox delivery, loaded QR images and the correct movie, date, time and seat details. Recheck delivery and image loading after changing the email configuration. No payment gateway is integrated. [EmailJS send endpoint](https://www.emailjs.com/docs/rest-api/send/).
 
 ## Host limits and release checks
 
 InfinityFree provides automatic SSL for direct free subdomains, not `www` or other nested subdomains. Use one consistent HTTPS hostname. Its mandatory browser protection requires JavaScript and cookies: same-origin browser requests work, but external API clients, webhooks, cross-origin clients and hotlinked site assets can be blocked. The PHP pages call the native backend internally; do not replace that with HTTP loopback requests. Google OAuth uses browser redirects and outbound HTTPS, which InfinityFree staff confirm is compatible with this policy. [SSL rules](https://forum.infinityfree.com/t/changes-to-ssl-for-free-subdomains/110169/1), [browser protection](https://forum.infinityfree.com/t/browser-security-system-features-and-limitations/49353), [Google login clarification](https://forum.infinityfree.com/t/anti-bot-help/112174/4).
 
-Before adding a live link to the portfolio, verify in a normal browser:
+Live browser checks on **15 November 2026** verified Google sign-in and owner access, profile saving, showtime filtering, a reservation retained after reload, ticket email received with loaded QR images and correct screening/seat details, and staff check-in followed by duplicate-ticket rejection. Recheck the following when deploying or changing configuration:
 
 - HTTPS, desktop/mobile pages, artwork, showtimes and the real hosted database.
 - Google sign-in/out, profile creation and the intended owner/staff restrictions.
@@ -67,4 +67,10 @@ Before adding a live link to the portfolio, verify in a normal browser:
 
 `/api/health` checks the API process only; it does not establish that those integrations work. The local integration harness at `scripts/test-native-integration.mjs` uses a disposable loopback database and deliberately leaves Google and email unconfigured. Local checks do not replace hosted verification.
 
-The supplied programme ends on **18 December 2026**. Extend movie run dates and screenings through owner tools for later use. Retain the project attribution to **Celine Emily Wijaya and Michael Joseph Candra**, **IE4727 · F34-DG02**, the [original report](project-report.pdf) and bundled third-party licences.
+## Programme dates
+
+Enable the [rolling programme](ROLLING-PROGRAMME.md) to keep the current 18 published films available through **31 December 2099**. Visitors replenish a **45-day timetable**, at most two dates per visit, with no monthly maintenance or scheduled job. Follow the runtime upload order, then import only the package's incremental `database/rolling-programme.sql` into the existing cinema database. It preserves existing screenings and bookings and respects owner cancellations and archived films; do not rerun the empty-database import.
+
+The original snapshot ends on **18 December 2026**. If rolling scheduling is disabled, extend film run dates and screenings through the owner tools. The original Node and independent base installations keep their manual scheduling workflow.
+
+Retain the project attribution to **Celine Emily Wijaya and Michael Joseph Candra**, **IE4727 · F34-DG02**, the [original report](project-report.pdf) and bundled third-party licences.

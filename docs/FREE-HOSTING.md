@@ -1,6 +1,6 @@
 # Free hosting for Upon a Star
 
-Status checked on **15 November 2026**. The current prepared route is **the complete native PHP backend on InfinityFree, using its included MySQL/MariaDB database**. The existing InfinityFree profile has no active hosting account yet. Nothing is deployed, and real Google OAuth and EmailJS delivery have not been verified. Follow the [native deployment guide](INFINITYFREE.md) for the package, private configuration and empty-database import.
+Status checked on **15 November 2026**. [Upon a Star Cinema is live](https://upon-a-star.infinityfreeapp.com/) with **the complete native PHP backend on InfinityFree, using its included MySQL/MariaDB database**. The homepage, catalogue, Google sign-in and owner access, saved bookings after reload, ticket email with QR images, and staff check-in with duplicate-ticket rejection have been verified on the live site. Follow the [native deployment guide](INFINITYFREE.md) for the package, private configuration and empty-database import.
 
 ## Application and service requirements
 
@@ -8,7 +8,7 @@ Native mode retains the canonical PHP interface and complete customer, booking a
 
 InfinityFree currently advertises PHP 8.4, MySQL 8.0/MariaDB 11.4, `.htaccess` support, a free subdomain and SSL, with no card or expiry. Resource limits and outages still apply; no uninterrupted uptime is guaranteed. Check the actual hosting account and [provider status](https://status.infinityfree.com/) before treating a deployment as available. [Published features](https://www.infinityfree.com/).
 
-Keep the site and its API on the same HTTPS hostname. InfinityFree's browser protection requires JavaScript/cookies and blocks external API clients, webhooks and cross-origin access; ordinary same-origin browser requests are supported. Google sign-in still needs a real OAuth client and exact callback, and ticket email needs actual EmailJS settings. Their outbound HTTPS calls are compatible with the published connection rules, but actual delivery and sign-in remain release checks. [Browser protection](https://forum.infinityfree.com/t/browser-security-system-features-and-limitations/49353), [Google-login clarification](https://forum.infinityfree.com/t/anti-bot-help/112174/4).
+Keep the site and its API on the same HTTPS hostname. InfinityFree's browser protection requires JavaScript/cookies and blocks external API clients, webhooks and cross-origin access; ordinary same-origin browser requests are supported. Google sign-in uses a configured OAuth client and exact callback, and ticket email needs actual EmailJS settings. Their outbound HTTPS calls are compatible with the published connection rules; Google sign-in and ticket email delivery have been verified on the live deployment. [Browser protection](https://forum.infinityfree.com/t/browser-security-system-features-and-limitations/49353), [Google-login clarification](https://forum.infinityfree.com/t/anti-bot-help/112174/4).
 
 ## Database and other hosting routes
 
@@ -16,7 +16,7 @@ The already-created TiDB Starter instance remains free and unused by this path. 
 
 | Route | Current disposition |
 | --- | --- |
-| InfinityFree + its MySQL/MariaDB | Native PHP package prepared; active hosting and live verification remain outstanding. |
+| InfinityFree + its MySQL/MariaDB | [Live native PHP site](https://upon-a-star.infinityfreeapp.com/); homepage, catalogue, Google sign-in, saved bookings, ticket email and staff check-in verified. |
 | Northflank + TiDB | Not recommended for this deployment: signup is disabled, and its official status page reports an ongoing security-incident investigation/review. [Provider status](https://status.northflank.com/). |
 | Nullstone | Its platform still requires a separate cloud account and infrastructure billed by that provider; it is not a standalone $0 hosting replacement. [How it works](https://docs.nullstone.io/getting-started/how-it-works.html). |
 | Oracle Always Free + TiDB | Signup encountered a request-limit block; no VM was provisioned. Existing [Compose files](../deployment/oracle/compose.yml) remain an optional reference. |
