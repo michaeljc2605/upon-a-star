@@ -13,7 +13,7 @@ node scripts/package-infinityfree.mjs
 This creates a new `build/infinityfree/` directory and refuses to replace an existing output directory. An optional path argument selects another new destination. Node is used to prepare the package locally; the uploaded website runs PHP without a Node process.
 
 - Upload only the **contents of `build/infinityfree/htdocs/`** to the hosting account's `htdocs`, including its `.htaccess`.
-- Keep `database/empty-database-import.sql`, `manifest.json` and `README.txt` outside the public web directory.
+- Keep the entire `database/` directory, `manifest.json`, `README.txt` and `ROLLING-PROGRAMME.md` outside the public web directory.
 - The packager excludes private configuration, Node dependencies, original SQL exports and the independent base's installer. Its routing rules protect the PHP source/configuration directories while exposing the canonical pages, assets and same-origin API.
 
 ## Database and private configuration
@@ -67,4 +67,10 @@ Live browser checks on **15 November 2026** verified Google sign-in and owner ac
 
 `/api/health` checks the API process only; it does not establish that those integrations work. The local integration harness at `scripts/test-native-integration.mjs` uses a disposable loopback database and deliberately leaves Google and email unconfigured. Local checks do not replace hosted verification.
 
-The supplied programme ends on **18 December 2026**. Extend movie run dates and screenings through owner tools for later use. Retain the project attribution to **Celine Emily Wijaya and Michael Joseph Candra**, **IE4727 · F34-DG02**, the [original report](project-report.pdf) and bundled third-party licences.
+## Programme dates
+
+Enable the [rolling programme](ROLLING-PROGRAMME.md) to keep the current 18 published films available through **31 December 2099**. Visitors replenish a **45-day timetable**, at most two dates per visit, with no monthly maintenance or scheduled job. Follow the runtime upload order, then import only the package's incremental `database/rolling-programme.sql` into the existing cinema database. It preserves existing screenings and bookings and respects owner cancellations and archived films; do not rerun the empty-database import.
+
+The original snapshot ends on **18 December 2026**. If rolling scheduling is disabled, extend film run dates and screenings through the owner tools. The original Node and independent base installations keep their manual scheduling workflow.
+
+Retain the project attribution to **Celine Emily Wijaya and Michael Joseph Candra**, **IE4727 · F34-DG02**, the [original report](project-report.pdf) and bundled third-party licences.

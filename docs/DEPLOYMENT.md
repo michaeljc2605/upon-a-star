@@ -67,7 +67,9 @@ For another deployment, establish its hosting destination, HTTPS hostname and pr
 
 ## Programme dates
 
-The supplied programme runs through **18 December 2026**. The application uses Singapore time and prevents booking past screenings. Extend movie run dates and add future screenings through the owner tools when operating the cinema beyond the supplied schedule. The PHP base's `base/database/refresh-schedule.php` can add screenings for eligible published films within their run dates.
+The native PHP deployment supports a [rolling programme](ROLLING-PROGRAMME.md) for the current 18 published films through **31 December 2099**. After its opt-in migration, visits replenish a **45-day timetable** in Singapore time, at most two dates per visit. No Node service or scheduled job is required. Upload the updated runtime before applying the incremental migration to the existing database; keep existing bookings and private configuration intact.
+
+Without that native feature, the supplied snapshot ends on **18 December 2026**. Local installations using the original Node backend or independent PHP base retain manual scheduling: extend movie run dates and add future screenings through the owner tools. The base's `base/database/refresh-schedule.php` can add screenings for eligible published films within their run dates. Past screenings remain unbookable in either mode.
 
 ## Publication hygiene
 

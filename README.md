@@ -89,6 +89,8 @@ Each order contains one seat's ticket code and QR link. Keep the code visible as
 
 ## Programme dates and source
 
-The exported programme runs through **18 December 2026**. Availability follows Singapore time, so past screenings are not bookable. For later demos, update run dates and add future screenings through the owner tools. The base's `base/database/refresh-schedule.php` can add future screenings for eligible published films within their run dates.
+The native PHP backend supports an opt-in [rolling programme](docs/ROLLING-PROGRAMME.md) for the current 18 published films through **31 December 2099**. Once enabled with the incremental SQL migration, visits replenish a **45-day timetable** in Singapore time, with no monthly schedule reset or scheduled job. Existing bookings, screenings and owner cancellations remain intact.
+
+The original database snapshot ends on **18 December 2026**. Local installations using the original Node backend or independent base retain manual scheduling: extend film run dates and add screenings through the owner tools. The base's `base/database/refresh-schedule.php` can add future screenings for eligible published films within their run dates. Do not reimport a snapshot over an existing cinema database to extend its programme.
 
 The source includes all PHP/React/Express files, CSS, artwork, routing rules, tests, utility scripts, and bundled library licences. Zootopia 2 uses remote artwork URLs and needs internet for those images. The `php/assets` alias is materialized as ordinary files for Windows extraction. Run npm commands from the project folder; `npm ci` restores dependencies omitted from the ZIP.
