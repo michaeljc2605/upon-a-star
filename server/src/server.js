@@ -12,6 +12,7 @@ import { clearSessionCookie, createSession, destroySession, issueCsrfToken, requ
 import { ROOM_TURNOVER_MINUTES, roomAvailableAt } from './screening-timing.js';
 import { nameAfterGoogleSignIn } from './google-profile.js';
 import { hasPlausibleSessionToken, isLoopbackSessionRead, isLoopbackSocket, loopbackSessionKey } from './rate-limit-policy.js';
+import { buildProxyTrust } from './proxy-policy.js';
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
@@ -23,7 +24,7 @@ const phpClientOrigin = (() => {
   }
   return url.href.replace(/\/+$/, '');
 })();
-app.set('trust proxy', 1);
+app.set('trust proxy', buildProxyTrust());
 app.use(helmet());
 app.use(cors({ origin: clientOrigin, credentials: true }));
 app.use(express.json({ limit: '100kb' }));
@@ -553,5 +554,6 @@ app.post('/api/admin/screenings', requireAuth, ownerOnly, requireCsrf, async (re
 } catch (error) { next(error); } });
 
 app.use((error, _request, response, _next) => { if (error instanceof z.ZodError) return response.status(400).json({ error: 'Invalid request data', fields: error.flatten().fieldErrors }); if (error.statusCode) return response.status(error.statusCode).json({ error: error.message }); if (error?.code === 'ER_DUP_ENTRY') return response.status(409).json({ error: 'That value already exists.' }); console.error(error); response.status(500).json({ error: 'Internal server error' }); });
-const server = app.listen(port, () => console.log(`Upon a Star API listening on http://localhost:${port}`));
+const apiBindHost = process.env.API_BIND_HOST || (process.env.NODE_ENV === 'production' ? '127.0.0.1' : '0.0.0.0');
+const server = app.listen(port, apiBindHost, () => console.log(`Upon a Star API listening on http://localhost:${port}`));
 for (const signal of ['SIGTERM', 'SIGINT']) process.once(signal, () => server.close(() => pool.end().finally(() => process.exit(0))));

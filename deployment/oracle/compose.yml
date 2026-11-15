@@ -1,0 +1,74 @@
+name: upon-a-star-oracle
+
+services:
+  app:
+    image: upon-a-star:oracle
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PUBLIC_URL: https://${CINEMA_HOSTNAME:?Set CINEMA_HOSTNAME in the private .env file}
+      PORT: '10000'
+      API_BIND_HOST: 127.0.0.1
+      TRUSTED_PROXY_IPS: ${CADDY_PRIVATE_IP:-172.30.25.2}
+      MYSQL_HOST: ${MYSQL_HOST:?Set the TiDB hostname}
+      MYSQL_PORT: ${MYSQL_PORT:-4000}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-silver_screen}
+      MYSQL_USER: ${MYSQL_USER:?Set the TiDB user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set the TiDB password}
+      MYSQL_SSL: 'true'
+      MYSQL_SSL_CA: /etc/ssl/certs/ca-certificates.crt
+      INITIALIZE_EMPTY_DATABASE: ${INITIALIZE_EMPTY_DATABASE:-false}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_OWNER_EMAILS: ${GOOGLE_OWNER_EMAILS:-}
+      EMAILJS_SERVICE_ID: ${EMAILJS_SERVICE_ID:-}
+      EMAILJS_TEMPLATE_ID: ${EMAILJS_TEMPLATE_ID:-}
+      EMAILJS_PUBLIC_KEY: ${EMAILJS_PUBLIC_KEY:-}
+      EMAILJS_PRIVATE_KEY: ${EMAILJS_PRIVATE_KEY:-}
+      SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES:-60}
+    # No host ports: only Caddy can reach Apache through the private network.
+    networks: [cinema]
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      CINEMA_HOSTNAME: ${CINEMA_HOSTNAME:?Set CINEMA_HOSTNAME}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      cinema:
+        ipv4_address: ${CADDY_PRIVATE_IP:-172.30.25.2}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+networks:
+  cinema:
+    driver: bridge
+    # Outbound access is needed for TiDB, Google, email and ACME certificates.
+    ipam:
+      config:
+        - subnet: ${CINEMA_PRIVATE_SUBNET:-172.30.25.0/24}
+
+volumes:
+  caddy_data:
+  caddy_config:

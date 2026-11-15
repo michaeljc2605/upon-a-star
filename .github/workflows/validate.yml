@@ -34,11 +34,22 @@ jobs:
         run: git ls-files -z '*.php' | xargs -0 -n 1 php -l
 
   docker-smoke:
-    runs-on: ubuntu-latest
+    name: Complete application (${{ matrix.architecture }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: AMD64
+            runner: ubuntu-24.04
+          - architecture: ARM64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+      - name: Validate Oracle deployment configuration
+        run: docker compose --env-file deployment/oracle/environment.example -f deployment/oracle/compose.yml config --quiet
       - name: Build the complete application image
         run: docker build --tag upon-a-star:ci .
       - name: Exercise PHP, API, database initialization and restart

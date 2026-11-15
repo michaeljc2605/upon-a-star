@@ -1,0 +1,29 @@
+# Copy this file to .env in this directory. The private .env is gitignored.
+# Use a DNS hostname you control, pointing to the VM's public IP. No URL scheme.
+CINEMA_HOSTNAME=cinema.example.com
+
+# TiDB Starter connection values; TLS certificate verification is mandatory.
+MYSQL_HOST=your-tidb-host.example.com
+MYSQL_PORT=4000
+MYSQL_DATABASE=silver_screen
+MYSQL_USER=replace-with-the-database-user
+MYSQL_PASSWORD=replace-with-the-database-password
+
+# Set true only for the first start against the intended empty database.
+# After successful provisioning set false and recreate the app container.
+INITIALIZE_EMPTY_DATABASE=false
+
+# Register https://<CINEMA_HOSTNAME>/api/auth/google/callback with Google.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_OWNER_EMAILS=
+SESSION_TTL_MINUTES=60
+
+EMAILJS_SERVICE_ID=
+EMAILJS_TEMPLATE_ID=
+EMAILJS_PUBLIC_KEY=
+EMAILJS_PRIVATE_KEY=
+
+# Change both only if this private subnet conflicts with an existing VM network.
+CADDY_PRIVATE_IP=172.30.25.2
+CINEMA_PRIVATE_SUBNET=172.30.25.0/24

@@ -6,7 +6,7 @@ This repository contains the complete PHP application, its Express API, optional
 
 - [Source repository](https://github.com/michaeljc2605/upon-a-star)
 - [Hosting and publication guide](docs/DEPLOYMENT.md)
-- [Free hosting setup and InfinityFree compatibility](docs/FREE-HOSTING.md)
+- [Oracle + TiDB free hosting, with Render fallback](docs/FREE-HOSTING.md)
 - [Original project report](docs/project-report.pdf)
 
 Publishing the source on GitHub does not deploy the application. Full hosting requires PHP, Node.js and a persistent database; account sign-in and ticket email also need their service configuration. No public application URL is claimed here until a server deployment is complete and verified. The original project assumes payment happens externally and does not integrate a payment provider.

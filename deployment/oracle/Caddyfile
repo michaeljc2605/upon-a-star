@@ -1,0 +1,5 @@
+{$CINEMA_HOSTNAME} {
+    encode zstd gzip
+    # Default forwarding replaces untrusted incoming X-Forwarded-* values.
+    reverse_proxy app:10000
+}
