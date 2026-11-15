@@ -6,12 +6,13 @@
 
 ## Application architecture
 
-The complete cinema is a PHP-led application with an Express API and persistent MySQL/MariaDB storage. The repository also contains an optional React interface and an independent assessed PHP base. Publishing this source repository does not provision or deploy those services.
+The complete cinema is a PHP-led application with persistent MySQL/MariaDB storage. Its original backend is Express; an opt-in native PHP backend is now prepared for shared hosting such as InfinityFree. Both modes retain the canonical PHP pages and design. The original Node/React source and independent assessed PHP base remain in the repository. Publishing this source does not deploy a website.
 
 | Component | Runtime and purpose |
 | --- | --- |
 | Complete PHP site | Apache, PHP 8.0+, PDO MySQL and PHP cURL; public pages, catalogue, bookings and staff screens |
 | Express API | Node.js 22; Google account authentication, sessions and enhanced booking/staff operations |
+| Opt-in native PHP backend | PHP 8.1+, PDO MySQL, cURL and mbstring; complete same-origin authentication, customer and staff/owner API without a Node server |
 | MySQL/MariaDB | Persistent programme, account, booking, ticket and operational data |
 | Optional React interface | Built with Vite and served alongside the API; uses the same real application backend |
 | Independent PHP base | Apache/PHP and its own MySQL database; guest booking and confirmation without the Express service |
@@ -39,13 +40,17 @@ The [README installation instructions](../README.md#install-and-import-the-datab
 - Both snapshots contain the schema and public programme data. Existing users, sessions, bookings and other private operational records are omitted.
 - Imports recreate application tables. Do not import snapshots over data you need to keep, or apply older seeds/migrations after importing these complete snapshots.
 
-The standalone base runs at `/SilverVillage/base/` with Apache and MySQL. The enhanced PHP application additionally uses Express, Google OAuth and the configured email service. The optional original React interface uses the same API and `silver_screen` database.
+The standalone base runs at `/SilverVillage/base/` with Apache and MySQL. The original enhanced PHP installation additionally uses Express, Google OAuth and the configured email service. The optional original React interface uses the same API and `silver_screen` database. Native shared-hosting installation uses its own package and host-assigned database name; follow [the InfinityFree guide](INFINITYFREE.md) instead of importing the original destructive snapshots into an existing hosted database.
 
-## Full application hosting
+## Native PHP shared hosting
 
-The planned free deployment is **an Oracle Cloud Always Free VM with TiDB Cloud Starter**, using a database spending limit of **0**. The repository includes an [Oracle Compose deployment](../deployment/oracle/compose.yml) with Caddy for HTTPS and a [Render Free blueprint](../render.yaml) as a fallback. See [the free hosting setup](FREE-HOSTING.md) for exact preparation steps, free-tier limits, required accounts and InfinityFree compatibility across the three portfolio projects. No live application or completed private-service configuration is claimed by these files.
+The current prepared path is **native PHP with InfinityFree's own MySQL/MariaDB database**. The existing InfinityFree profile has no active hosting account yet. No native package is deployed, and real Google OAuth, EmailJS delivery and provider-specific behavior remain unverified. See [the native deployment guide](INFINITYFREE.md) for packaging, private `php/config.local.php`, the empty-database import and exact HTTPS callback.
 
-The Docker site serves the complete PHP interface at `/`; the original local installation continues to use `/SilverVillage/`. Oracle VM capacity must be available in the account's home region, and idle free VMs may be reclaimed. Render Free sleeps after inactivity. Neither path guarantees uninterrupted uptime, and paid upgrades are outside this $0 setup. A controlled HTTPS hostname, Google OAuth configuration and EmailJS configuration remain required for the full hosted flow.
+The existing free TiDB instance is unused by this route because InfinityFree blocks outbound database port 4000. Native mode is explicitly enabled with `PHP_BACKEND=native`; without that setting, the original Express integration remains the default. The shared-hosting package serves the complete PHP site at `/` and routes `/api` to PHP. It does not include the optional React build or the independent base as a public second site.
+
+## Original Docker / Express hosting
+
+The original Docker image still runs Apache/PHP and Express together. The [Oracle Compose files](../deployment/oracle/compose.yml) and [Render blueprint](../render.yaml) remain optional references. Oracle signup was blocked, Northflank signup is unavailable during an ongoing security-incident review, and Render's free-service cold start does not meet the current preference. None is a claimed live deployment. See [hosting status and limitations](FREE-HOSTING.md).
 
 A host for the complete project must support PHP, a persistent Node process and MySQL/MariaDB. Keep database storage independent of application rebuilds and restarts, using a persistent database volume or a managed database. Configure backups before storing operational data.
 
@@ -57,7 +62,7 @@ A host for the complete project must support PHP, a persistent Node process and 
 6. Preserve the Apache access rules that protect source directories, environment files and SQL exports. Configure equivalent rules if changing servers. Keep PHP sessions and MySQL data available across ordinary application restarts.
 7. Verify the hosted catalogue, sign-in, booking persistence, seat availability, staff authorization, ticket lookup and email delivery. Confirm that created records survive a restart before treating the deployment as ready for use.
 
-The hosting destination, HTTPS hostname and private service configuration must be established and verified before a public application URL can be added to the repository or portfolio. The source-publication workflow does not create those accounts or resources. Use the Oracle launcher and its private environment file for the primary deployment, or Render's private environment settings for the fallback; keep all real credentials out of the repository.
+The hosting destination, HTTPS hostname and private service configuration must be established and verified before a public application URL can be added to the repository or portfolio. The source-publication workflow does not create those accounts or resources. Keep real credentials out of the repository and use the configuration method for the selected backend.
 
 ## Programme dates
 

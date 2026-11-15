@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/native-config.php';
+
 /**
  * Reservation acknowledgements for the PHP-led site only. The independent
  * /base/ booking flow never loads this file or needs an email provider.
@@ -16,7 +18,7 @@ function php_email_setting(string $name): string
         return '';
     }
 
-    $fromProcess = getenv($name);
+    $fromProcess = php_setting($name);
     if (is_string($fromProcess) && trim($fromProcess) !== '') {
         return trim($fromProcess);
     }
